@@ -1,0 +1,9 @@
+{
+    'FTP-site-handle' => {
+	'USER' => 'anonymous',
+	'SITE' => '127.0.0.1',
+	'PASS' => 'me@localhost',
+	'PORT' => '21'
+	'ROOT' => '/',  # start of search
+	}
+};

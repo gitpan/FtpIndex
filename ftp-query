@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+use strict;
+use OurNet::FuzzyIndex;
+
+my $CONFIGPATH = "$ENV{HOME}/.ftpsearch";
+my $CONFIGFILE= "$CONFIGPATH/ftp-config";
+
+# ----------------------------------------------------------------------
+# % ftp-query QUERY [ SITE ]
+# ----------------------------------------------------------------------
+my $config = do $CONFIGFILE;
+die "CONFIG ERROR\n" if $@;
+my ($query, $site)  = @ARGV;
+
+foreach my $abbr (keys %$config){
+    next if $site && $site ne $abbr;
+    my $idxfile  = "$CONFIGPATH/ftpidx-$abbr.idx";
+    my $db = OurNet::FuzzyIndex->new($idxfile, undef, undef, 0);
+    my %result = $db->query($query, $MATCH_EXACT);
+    printf "<%s> %s\n", $abbr, $db->getkey($_) for sort keys %result;
+
+}
+
+__END__

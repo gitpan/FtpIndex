@@ -1,0 +1,56 @@
+#!/usr/bin/perl
+use strict;
+use Net::FTP;
+use OurNet::FuzzyIndex;
+
+$|++;
+
+# ----------------------------------------------------------------------
+# % ftp-index [ SITE ]
+# ----------------------------------------------------------------------
+
+my $CONFIGPATH = "$ENV{HOME}/.ftpsearch";
+my $CONFIGFILE = "$CONFIGPATH/ftp-config";
+
+my $site = $ARGV[0];
+mkdir $CONFIGPATH;
+
+my $config = do $CONFIGFILE;
+die "CONFIG ERROR\n" if $@;
+
+sub isd { 1 if $_[0] =~ /^[dl]/o }
+
+sub name{
+    my $t= $_[0];
+    $t=~s/^(?:.+?\s+){8}(.+)$/$1/o;
+    $t = $1 if $_[0] =~ /^l/o && $t=~/->\s*(.+)$/o;
+    $t
+}
+
+foreach my $abbr (keys %$config){
+    next if $site && $site ne $abbr;
+    my $r = $config->{$abbr};
+    my $idxfile  = "$CONFIGPATH/ftpidx-$abbr.idx";
+    my $ftp = Net::FTP->new($r->{SITE}, Port => $r->{PORT}, Debug => 0, Timeout => 20);
+    $ftp->login($r->{USER},$r->{PASS});
+
+    unlink $idxfile if -e $idxfile;
+    my $db = OurNet::FuzzyIndex->new($idxfile, undef, undef, $r->{SBDB});
+    
+    my @queue = ($r->{ROOT});
+    for my $p (@queue){
+	for($ftp->dir($p)){
+	    my$n=name($_);
+	    next if $n =~ /^\.\.?/o;
+	    (my$t =join '/', $p, $n) =~ s/\/+/\//o;
+	    (isd $_) ?
+		push @queue,$t :
+		printf "%s:%6d : %-50s\r", $abbr, ++$*, substr($n,0,50);
+	    $db->insert($t,$t);
+	}
+    }
+
+$ftp->quit;
+}
+
+print "\n";

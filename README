@@ -1,0 +1,13 @@
+- ftp-index and ftp-query are tiny tools for indexing ftp sites.
+  It creates directory $ENV{HOME}/.ftpsearch to store the configuration file.
+
+- See ftp-config.sample for settings.
+
+- Prerequisite
+   OurNet::FuzzyIndex
+
+- Author
+   xern <xern@cpan.org>
+
+- License
+   The Artistic License
